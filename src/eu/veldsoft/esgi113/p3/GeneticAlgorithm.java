@@ -12,6 +12,24 @@ class GeneticAlgorithm {
 	private Vector<Double> fitness = new Vector<Double>();
 	private Vector<Vector<Piece>> population = new Vector<Vector<Piece>>();
 
+	private boolean overlap(Piece current) {
+		Vector<Piece> result = population.get(worstIndex);
+		for (Piece piece : result) {
+			if (current == piece) {
+				continue;
+			}
+
+			if (!(piece.getX() >= (current.getX() + current.getWidth())
+					|| current.getX() >= (piece.getX() + piece.getWidth())
+					|| piece.getY() >= (current.getY() + current.getHeight()) || current
+					.getY() >= (piece.getY() + piece.getHeight()))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	GeneticAlgorithm(int populationSize, Vector<Piece> pieces) {
 		/*
 		 * At least 4 elements should be available in order random index
@@ -102,77 +120,31 @@ class GeneticAlgorithm {
 	/**
 	 * Bring all pieces in the boundaries of the the sheet.
 	 */
-	void lineup(int width, int height) {
+	void bound(int width, int height) {
 		Vector<Piece> result = population.get(worstIndex);
 
 		for (Piece piece : result) {
-			if (piece.getX() < 0) {
-				piece.setX(0);
-			}
-			if (piece.getX() + piece.getWidth() > width) {
-				piece.setX(width - piece.getWidth());
-			}
-			if (piece.getY() < 0) {
-				piece.setY(0);
-			}
-			if (piece.getY() + piece.getHeight() > height) {
-				piece.setX(height - piece.getHeight());
+			while (piece.getX() < 0
+					|| (piece.getX() + piece.getWidth()) >= width
+					|| piece.getY() < 0
+					|| (piece.getY() + piece.getHeight()) >= height
+					|| overlap(piece) == true) {
+				piece.setX(Util.PRNG.nextInt(width - piece.getWidth()));
+				piece.setY(Util.PRNG.nextInt(height - piece.getHeight()));
 			}
 		}
 	}
 
-	void evaluate(int width, int height) {
+	void evaluate() {
 		Vector<Piece> result = population.get(worstIndex);
-
-		/*
-		 * Shift all pieces to the far end.
-		 */
-		for (Piece piece : result) {
-			piece.setY(height);
-		}
-
-		/*
-		 * Keep track of packing level.
-		 */
-		int level[] = new int[width];
-		for (int i = 0; i < level.length; i++) {
-			level[i] = 0;
-		}
-
-		/*
-		 * Shift all pieces in one side.
-		 */
-		for (Piece piece : result) {
-			/*
-			 * Find shifting line.
-			 */
-			int shift = 0;
-			for (int x = piece.getX(); x < piece.getX() + piece.getWidth(); x++) {
-				if (shift < level[x]) {
-					shift = level[x];
-				}
-			}
-
-			/*
-			 * Move piece to the line.
-			 */
-			piece.setY(shift);
-
-			/*
-			 * Move shifting line.
-			 */
-			for (int x = piece.getX(); x < piece.getX() + piece.getWidth(); x++) {
-				level[x] += piece.getY() + piece.getHeight();
-			}
-		}
 
 		/*
 		 * Measure length as fitness value.
 		 */
 		double length = 0.0;
-		for (int i = 0; i < level.length; i++) {
-			if (length < level[i]) {
-				length = level[i];
+		for (Piece piece : result) {
+			if (length < piece.getY() + piece.getHeight()) {
+				length = piece.getY() + piece.getHeight();
 			}
 		}
 

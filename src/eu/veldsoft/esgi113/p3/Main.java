@@ -44,22 +44,23 @@ public class Main {
 			}
 			h = in.nextInt();
 
-			pieces.add(new Piece(0, 0, w, h));
+			pieces.add(new Piece(Util.PRNG.nextInt(X - w), Util.PRNG.nextInt(Y
+					- h), w, h));
 		}
 
 		GeneticAlgorithm ga = new GeneticAlgorithm(37, pieces);
-		for (long g = 0; g < 1; g++) {
+		for (long g = 0L; g < 100L; g++) {
 			ga.findBestAndWorst();
 			ga.select();
 			ga.crossover();
 			ga.mutate();
-			ga.evaluate(X, Y);
-			ga.lineup(X, Y);
-			ga.evaluate(X, Y);
+			ga.bound(X, Y);
+			ga.evaluate();
 		}
 
 		ga.findBestAndWorst();
-		Util.saveSolution("" + (new Date()).getTime() + ".bmp", pieces, X, Y);
+		Util.saveSolution("" + (new Date()).getTime() + ".bmp", ga.getBest(),
+				X, Y);
 
 		in.close();
 	}
