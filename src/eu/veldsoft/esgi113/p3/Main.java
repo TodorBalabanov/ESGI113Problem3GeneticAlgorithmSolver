@@ -48,15 +48,20 @@ public class Main {
 					- h), w, h));
 		}
 
-		GeneticAlgorithm ga = new GeneticAlgorithm(37, pieces);
-		for (long g = 0L; g < 100L; g++) {
+		GeneticAlgorithm ga = new GeneticAlgorithm(47, pieces);
+		final long NUMBER_OF_NEW_INDIVIDUALS = 100000;
+		for (long g = 0L; g < NUMBER_OF_NEW_INDIVIDUALS; g++) {
 			ga.findBestAndWorst();
 			ga.select();
 			ga.crossover();
 			ga.mutate();
-			ga.bound(X, Y);
+			ga.pack(X, Y);
 			ga.evaluate();
+			if((80*g/NUMBER_OF_NEW_INDIVIDUALS+1) == (80*(g+1)/NUMBER_OF_NEW_INDIVIDUALS)) {
+				System.out.print("=");
+			}
 		}
+		System.out.println();
 
 		ga.findBestAndWorst();
 		Util.saveSolution("" + (new Date()).getTime() + ".bmp", ga.getBest(),

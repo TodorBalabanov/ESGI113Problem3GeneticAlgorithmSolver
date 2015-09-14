@@ -21,13 +21,37 @@ class GeneticAlgorithm {
 
 			if (!(piece.getX() >= (current.getX() + current.getWidth())
 					|| current.getX() >= (piece.getX() + piece.getWidth())
-					|| piece.getY() >= (current.getY() + current.getHeight()) || current
-					.getY() >= (piece.getY() + piece.getHeight()))) {
+					|| piece.getY() >= (current.getY() + current.getHeight())
+					|| current.getY() >= (piece.getY() + piece.getHeight()))) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	private void allLandscape(Vector<Piece> pieces) {
+		/*
+		 * Rotate all pieces.
+		 */
+		for (Piece piece : pieces) {
+			if (piece.getWidth() < piece.getHeight()) {
+				piece.turn();
+			}
+		}
+
+	}
+
+	private void allPortrait(Vector<Piece> pieces) {
+		/*
+		 * Rotate all pieces.
+		 */
+		for (Piece piece : pieces) {
+			if (piece.getWidth() > piece.getHeight()) {
+				piece.turn();
+			}
+		}
+
 	}
 
 	GeneticAlgorithm(int populationSize, Vector<Piece> pieces) {
@@ -44,7 +68,33 @@ class GeneticAlgorithm {
 			for (Piece piece : pieces) {
 				chromosome.add((Piece) piece.clone());
 			}
+
 			Collections.shuffle(chromosome);
+
+			switch (Util.PRNG.nextInt(3)) {
+			case 0:
+				/* Unchanged. */
+				break;
+			case 1:
+				allLandscape(chromosome);
+				break;
+			case 2:
+				allPortrait(chromosome);
+				break;
+			}
+
+			switch (Util.PRNG.nextInt(3)) {
+			case 0:
+				/* Unchanged. */
+				break;
+			case 1:
+				Collections.sort(chromosome, new WidthComparatr());
+				break;
+			case 2:
+				Collections.sort(chromosome, new HeightComparatr());
+				break;
+			}
+
 			population.add(chromosome);
 			fitness.add(Double.MAX_VALUE - Util.PRNG.nextDouble());
 		}
@@ -65,12 +115,10 @@ class GeneticAlgorithm {
 		worstIndex = 0;
 
 		for (int index = 0; index < fitness.size(); index++) {
-			if (fitness.get(index).doubleValue() < fitness.get(bestIndex)
-					.doubleValue()) {
+			if (fitness.get(index).doubleValue() < fitness.get(bestIndex).doubleValue()) {
 				bestIndex = index;
 			}
-			if (fitness.get(index).doubleValue() > fitness.get(worstIndex)
-					.doubleValue()) {
+			if (fitness.get(index).doubleValue() > fitness.get(worstIndex).doubleValue()) {
 				worstIndex = index;
 			}
 		}
@@ -80,8 +128,7 @@ class GeneticAlgorithm {
 		do {
 			firstIndex = Util.PRNG.nextInt(population.size());
 			secondIndex = Util.PRNG.nextInt(population.size());
-		} while (firstIndex == secondIndex || firstIndex == worstIndex
-				|| secondIndex == worstIndex);
+		} while (firstIndex == secondIndex || firstIndex == worstIndex || secondIndex == worstIndex);
 	}
 
 	void crossover() {
@@ -113,8 +160,11 @@ class GeneticAlgorithm {
 			piece.turn();
 		}
 
-		piece.setX(piece.getX() + Util.PRNG.nextInt(3) - 1);
-		piece.setY(piece.getY() + Util.PRNG.nextInt(3) - 1);
+		if (Util.PRNG.nextBoolean() == true) {
+			piece = result.remove(Util.PRNG.nextInt(result.size()));
+			result.add(piece);
+		}
+
 	}
 
 	/**
@@ -124,14 +174,51 @@ class GeneticAlgorithm {
 		Vector<Piece> result = population.get(worstIndex);
 
 		for (Piece piece : result) {
-			while (piece.getX() < 0
-					|| (piece.getX() + piece.getWidth()) >= width
-					|| piece.getY() < 0
-					|| (piece.getY() + piece.getHeight()) >= height
-					|| overlap(piece) == true) {
+			while (piece.getX() < 0 || (piece.getX() + piece.getWidth()) >= width || piece.getY() < 0
+					|| (piece.getY() + piece.getHeight()) >= height || overlap(piece) == true) {
 				piece.setX(Util.PRNG.nextInt(width - piece.getWidth()));
 				piece.setY(Util.PRNG.nextInt(height - piece.getHeight()));
 			}
+		}
+	}
+
+	public void pack(int width, int height) {
+		int level[] = new int[width];
+		for (int i = 0; i < level.length; i++) {
+			level[i] = 0;
+		}
+
+		int x = 0;
+		int y = 0;
+		Vector<Piece> result = population.get(worstIndex);
+		for (Piece piece : result) {
+			if (x + piece.getWidth() >= width) {
+				x = 0;
+			}
+
+			/*
+			 * Find y offset for current piece.
+			 */
+			y = 0;
+			for (int dx = x; dx < (x + piece.getWidth()); dx++) {
+				if (y < level[dx]) {
+					y = level[dx];
+				}
+			}
+
+			/*
+			 * Set current piece coordinates.
+			 */
+			piece.setX(x);
+			piece.setY(y);
+
+			/*
+			 * Move lines for next placment.
+			 */
+			for (int dx = x; dx < (x + piece.getWidth()); dx++) {
+				level[dx] = y + piece.getHeight();
+			}
+			x += piece.getWidth();
 		}
 	}
 
