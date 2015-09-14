@@ -38,15 +38,21 @@ class GeneticAlgorithm {
 		select();
 	}
 
+	Vector<Piece> getBest() {
+		return population.get(bestIndex);
+	}
+
 	void findBestAndWorst() {
 		bestIndex = 0;
 		worstIndex = 0;
 
 		for (int index = 0; index < fitness.size(); index++) {
-			if (fitness.get(index).doubleValue() < fitness.get(bestIndex).doubleValue()) {
+			if (fitness.get(index).doubleValue() < fitness.get(bestIndex)
+					.doubleValue()) {
 				bestIndex = index;
 			}
-			if (fitness.get(index).doubleValue() > fitness.get(worstIndex).doubleValue()) {
+			if (fitness.get(index).doubleValue() > fitness.get(worstIndex)
+					.doubleValue()) {
 				worstIndex = index;
 			}
 		}
@@ -56,7 +62,8 @@ class GeneticAlgorithm {
 		do {
 			firstIndex = Util.PRNG.nextInt(population.size());
 			secondIndex = Util.PRNG.nextInt(population.size());
-		} while (firstIndex == secondIndex || firstIndex == worstIndex || secondIndex == worstIndex);
+		} while (firstIndex == secondIndex || firstIndex == worstIndex
+				|| secondIndex == worstIndex);
 	}
 
 	void crossover() {
@@ -115,13 +122,59 @@ class GeneticAlgorithm {
 	}
 
 	void evaluate(int width, int height) {
-		double length = 0.0;
-
 		Vector<Piece> result = population.get(worstIndex);
 
-		// TODO Shift all pieces in one side.
+		/*
+		 * Shift all pieces to the far end.
+		 */
+		for (Piece piece : result) {
+			piece.setY(height);
+		}
 
-		// TODO Measure length as fitness value.
+		/*
+		 * Keep track of packing level.
+		 */
+		int level[] = new int[width];
+		for (int i = 0; i < level.length; i++) {
+			level[i] = 0;
+		}
+
+		/*
+		 * Shift all pieces in one side.
+		 */
+		for (Piece piece : result) {
+			/*
+			 * Find shifting line.
+			 */
+			int shift = 0;
+			for (int x = piece.getX(); x < piece.getX() + piece.getWidth(); x++) {
+				if (shift < level[x]) {
+					shift = level[x];
+				}
+			}
+
+			/*
+			 * Move piece to the line.
+			 */
+			piece.setY(shift);
+
+			/*
+			 * Move shifting line.
+			 */
+			for (int x = piece.getX(); x < piece.getX() + piece.getWidth(); x++) {
+				level[x] += piece.getY() + piece.getHeight();
+			}
+		}
+
+		/*
+		 * Measure length as fitness value.
+		 */
+		double length = 0.0;
+		for (int i = 0; i < level.length; i++) {
+			if (length < level[i]) {
+				length = level[i];
+			}
+		}
 
 		fitness.insertElementAt(length, worstIndex);
 		fitness.remove(worstIndex + 1);
