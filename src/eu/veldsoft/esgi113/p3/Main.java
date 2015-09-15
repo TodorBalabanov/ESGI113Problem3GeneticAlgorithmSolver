@@ -49,7 +49,7 @@ public class Main {
 		}
 
 		GeneticAlgorithm ga = new GeneticAlgorithm(47, pieces);
-		final long NUMBER_OF_NEW_INDIVIDUALS = 100000;
+		final long NUMBER_OF_NEW_INDIVIDUALS = 1_000_000;
 		for (long g = 0L; g < NUMBER_OF_NEW_INDIVIDUALS; g++) {
 			ga.findBestAndWorst();
 			ga.select();
