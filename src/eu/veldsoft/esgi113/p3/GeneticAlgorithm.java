@@ -88,10 +88,10 @@ class GeneticAlgorithm {
 				/* Unchanged. */
 				break;
 			case 1:
-				Collections.sort(chromosome, new WidthComparatr());
+				Collections.sort(chromosome, new WidthComparator());
 				break;
 			case 2:
-				Collections.sort(chromosome, new HeightComparatr());
+				Collections.sort(chromosome, new HeightComparator());
 				break;
 			}
 
